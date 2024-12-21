@@ -1,0 +1,56 @@
+{
+  "name": "@ai-memo/main",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "@rslib/core": "^0.1.5",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.8.1",
+    "eslint": "^9.12.0",
+    "globals": "^15.11.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.8.1",
+    "vitest": "^2.1.8",
+    "zod": "^3.24.1"
+  },
+  "peerDependencies": {
+    "zod": "^3.24.1"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.0.11",
+    "@ai-sdk/openai": "^1.0.10",
+    "@langchain/community": "^0.3.19",
+    "@qdrant/js-client-rest": "^1.12.0",
+    "@types/crypto-js": "^4.2.2",
+    "ai": "^4.0.20",
+    "better-sqlite3": "^11.7.0",
+    "crypto-js": "^4.2.0",
+    "date-fns-tz": "^3.2.0",
+    "neo4j-driver": "^5.27.0",
+    "posthog-node": "^4.3.2",
+    "radashi": "^12.3.0",
+    "uuid": "^11.0.3"
+  }
+}
