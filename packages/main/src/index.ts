@@ -8,6 +8,7 @@ export type { MemoryConfig } from "./memory/main";
 export { Memory } from "./memory/main";
 
 export { OpenAILLM } from "./llms/opeai";
+export { GeminiLLM } from "./llms/gemini";
 
 export { OpenAIEmbedding } from "./embeddings/openai";
 export { GoogleGenAIEmbedding } from "./embeddings/gemini";

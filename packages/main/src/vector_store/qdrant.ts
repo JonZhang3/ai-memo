@@ -1,5 +1,5 @@
 import type { VectorStoreBase } from "./base";
-import { QdrantClient } from "@qdrant/js-client-rest";
+import { QdrantClient, type Schemas } from "@qdrant/js-client-rest";
 import type {
   QdrantVectorStoreConfig,
   VectorStoreData,
@@ -136,18 +136,28 @@ export class QdrantDB implements VectorStoreBase {
     }));
   }
 
-  private createFilter(filters?: VectorStoreFilter) {
+  private createFilter(
+    filters?: VectorStoreFilter,
+  ): Schemas["Filter"] | undefined {
     if (!filters) {
       return undefined;
     }
-    const filter: Record<string, any> = {};
-    if (filters.user_id) {
-      filter.must = {
-        key: "user_id",
-        match: {
-          value: filters.user_id,
-        },
-      };
+    const predicates = new Set(["should", "min_should", "must", "must_not"]);
+    const filter: Schemas["Filter"] = {};
+    for (const [key, value] of Object.entries(filters)) {
+      if (predicates.has(key)) {
+        (filter[key as keyof typeof filter] as any) = value;
+      } else {
+        if (!filter.must) {
+          filter.must = [];
+        }
+        (filter.must as any[]).push({
+          key,
+          match: {
+            value,
+          },
+        });
+      }
     }
     return filter;
   }
