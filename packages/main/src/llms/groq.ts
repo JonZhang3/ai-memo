@@ -1,38 +1,35 @@
-import { createAITools, type LLMBase } from "./base";
 import type {
-  GeminiLLMConfig,
-  LLMTool,
-  LLMToolCall,
-  LLMToolChoice,
+  BaseLLMConfig,
   MemoryCoreMessage,
+  LLMTool,
+  LLMToolChoice,
+  LLMToolCall,
 } from "../types";
+import type { ZodType, ZodTypeDef, TypeOf } from "zod";
+import { type LLMBase, createAITools } from "./base";
 import { generateObject, generateText } from "ai";
-import {
-  createGoogleGenerativeAI,
-  type GoogleGenerativeAIProvider,
-} from "@ai-sdk/google";
-import type { z, ZodType, ZodTypeDef } from "zod";
-import { GEMINI_API_KEY, GEMINI_API_BASE_URL } from "../configs/env.config";
+import { createGroq, type GroqProvider } from "@ai-sdk/groq";
 
-export class GeminiLLM implements LLMBase {
-  private readonly config: Readonly<GeminiLLMConfig>;
-  private readonly client: GoogleGenerativeAIProvider;
+export type GroqLLMConfig = BaseLLMConfig;
 
-  constructor(config?: GeminiLLMConfig) {
+export class GroqLLM implements LLMBase {
+  private readonly config: Readonly<GroqLLMConfig>;
+  private readonly client: GroqProvider;
+
+  constructor(config: GroqLLMConfig) {
     this.config = {
       ...config,
-      model: config?.model ?? "gemini-1.5-flash-latest",
-      apiKey: config?.apiKey ?? GEMINI_API_KEY,
-      baseUrl: config?.baseUrl ?? GEMINI_API_BASE_URL,
+      model: config.model ?? "llama3-70b-8192",
+      apiKey: config.apiKey ?? process.env.GROQ_API_KEY,
     };
-    this.client = createGoogleGenerativeAI({
+    this.client = createGroq({
       apiKey: this.config.apiKey,
       baseURL: this.config.baseUrl,
       headers: this.config.headers,
     });
   }
 
-  readonly provider: string = "gemini";
+  provider: string = "groq";
 
   async generateObject<OBJECT>(
     messages: MemoryCoreMessage[],
@@ -68,7 +65,7 @@ export class GeminiLLM implements LLMBase {
     toolChoice?: LLMToolChoice,
   ): Promise<{
     text: string;
-    toolCalls: LLMToolCall<TOOL["name"], z.infer<TOOL["parameters"]>>[];
+    toolCalls: LLMToolCall<TOOL["name"], TypeOf<TOOL["parameters"]>>[];
   }> {
     const { text, toolCalls } = await generateText({
       model: this.client(this.config.model!),
@@ -82,7 +79,7 @@ export class GeminiLLM implements LLMBase {
     });
     return {
       text,
-      toolCalls: toolCalls.map((tool) => ({
+      toolCalls: Object.values(toolCalls).map((tool) => ({
         name: tool.toolName,
         parameters: tool.args,
       })),

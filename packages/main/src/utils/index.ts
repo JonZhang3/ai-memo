@@ -1,12 +1,11 @@
 import type { MemoryMessages } from "../types";
-import { formatInTimeZone } from "date-fns-tz";
 
-export function getPacificTime(date?: Date): string {
-  return formatInTimeZone(
-    date || new Date(),
-    "US/Pacific",
-    "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-  );
+export function getUTCTime(date?: Date): string {
+  return (date || new Date()).toISOString();
+}
+
+export function getUTCTimestamp(date?: string): number {
+  return date ? new Date(date).getTime() : new Date().getTime();
 }
 
 export async function ensureOptionalDependency(dependencyName: string) {

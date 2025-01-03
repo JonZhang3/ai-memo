@@ -21,20 +21,20 @@ import type {
   VectorStoreData,
   VectorStoreDataPayload,
 } from "../types";
-import { getPacificTime, parseMessages } from "../utils";
+import { getUTCTime, parseMessages } from "../utils";
 import type { VectorStoreBase } from "../vector_store/base";
 import type { MemoryBase } from "./base";
 import { SQLiteManager } from "./storage";
 import { captureEvent } from "./telemetry";
 import { v4 as uuid } from "uuid";
 import md5 from "crypto-js/md5";
-import { OpenAILLM } from "../llms/opeai";
-import { OpenAIEmbedding } from "../embeddings/openai";
+import type { GraphMemoryBase } from "../graphs/base";
 
 export interface MemoryConfig {
   vectorStore: VectorStoreBase;
-  llm?: LLMBase;
-  embedder?: EmbeddingBase;
+  llm: LLMBase;
+  embedder: EmbeddingBase;
+  graph: GraphMemoryBase;
   historyDBPath?: string;
   customPrompt?: string;
 }
@@ -45,8 +45,9 @@ export class Memory implements MemoryBase {
   private readonly db: SQLiteManager;
 
   private vectorStore: VectorStoreBase;
-  private llm?: LLMBase;
-  private embedder?: EmbeddingBase;
+  private llm: LLMBase;
+  private embedder: EmbeddingBase;
+  private graph: GraphMemoryBase;
 
   constructor(config: MemoryConfig) {
     this.config = {
@@ -55,6 +56,7 @@ export class Memory implements MemoryBase {
     this.vectorStore = config.vectorStore;
     this.llm = config.llm;
     this.embedder = config.embedder;
+    this.graph = config.graph;
     this.db = new SQLiteManager(this.config.historyDBPath);
     captureEvent("mem0.init", this);
   }
@@ -64,17 +66,15 @@ export class Memory implements MemoryBase {
   }
 
   private async getLlm(): Promise<LLMBase> {
-    if (!this.llm) {
-      this.llm = new OpenAILLM();
-    }
-    return this.llm!;
+    return this.llm;
   }
 
   private async getEmbedder(): Promise<EmbeddingBase> {
-    if (!this.embedder) {
-      this.embedder = new OpenAIEmbedding();
-    }
-    return this.embedder!;
+    return this.embedder;
+  }
+
+  private async getGraph(): Promise<GraphMemoryBase> {
+    return this.graph;
   }
 
   async add({
@@ -108,7 +108,7 @@ export class Memory implements MemoryBase {
     }
     const results = await Promise.all([
       this.addToVectorStore(messages, metadata, filters),
-      // this.addToGraph(messages, filters),
+      this.addToGraph(messages, filters),
     ]);
     return {
       results: results[0],
@@ -236,6 +236,18 @@ export class Memory implements MemoryBase {
 
     captureEvent("mem0.add", this, { keys: Object.keys(filters).join(",") });
     return returnedMemories;
+  }
+
+  private async addToGraph(
+    messages: MemoryCoreMessage[],
+    filters: Record<string, LiteralValue>,
+  ) {
+    const data = messages
+      .filter((message) => message.content && message.role !== "system")
+      .map((message) => message.content)
+      .join("\n");
+    const graph = await this.getGraph();
+    return await graph.add(data, filters);
   }
 
   async get(memoryId: string): Promise<MemoryItem | null> {
@@ -468,7 +480,7 @@ export class Memory implements MemoryBase {
       ...metadata,
       data,
       hash: md5(data).toString(),
-      created_at: getPacificTime(),
+      created_at: getUTCTime(),
     };
 
     const vectorStore = await this.getVectorStore();

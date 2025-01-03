@@ -1,7 +1,7 @@
 import SQLite3 from "better-sqlite3";
 import { v4 as uuid } from "uuid";
 import { isEqual } from "radashi";
-import { getPacificTime } from "../utils";
+import { getUTCTime } from "../utils";
 import type { MemoryHistory } from "../types";
 
 const HISTORY_TABLE_SCHEMA = `
@@ -44,7 +44,7 @@ export class SQLiteManager {
     const stmt = this.db.prepare(
       `INSERT INTO history (id, memory_id, old_memory, new_memory, event, created_at, updated_at, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
-    const time = createdAt ?? getPacificTime();
+    const time = createdAt ?? getUTCTime();
     stmt.run(
       uuid(),
       memoryId,
@@ -73,10 +73,10 @@ export class SQLiteManager {
         newMemory: row.new_memory,
         event: row.event,
         createdAt: row.created_at
-          ? getPacificTime(new Date(row.created_at))
+          ? getUTCTime(new Date(row.created_at))
           : undefined,
         updatedAt: row.updated_at
-          ? getPacificTime(new Date(row.updated_at))
+          ? getUTCTime(new Date(row.updated_at))
           : undefined,
       });
     });

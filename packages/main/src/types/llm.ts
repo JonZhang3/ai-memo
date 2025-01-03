@@ -8,6 +8,14 @@ export interface LLMTool {
 
 export type LLMToolChoice = "auto" | "none" | "required";
 
+export interface LLMToolCall<
+  NAME extends string,
+  PARAMS extends Record<string, any>,
+> {
+  name: NAME;
+  parameters: PARAMS;
+}
+
 export interface BaseLLMConfig {
   apiKey?: string;
   baseUrl?: string;

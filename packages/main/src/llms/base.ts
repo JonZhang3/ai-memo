@@ -1,5 +1,10 @@
 import type { z } from "zod";
-import type { LLMTool, LLMToolChoice, MemoryCoreMessage } from "../types";
+import type {
+  LLMTool,
+  LLMToolChoice,
+  MemoryCoreMessage,
+  LLMToolCall,
+} from "../types";
 import type { CoreTool } from "ai";
 
 export interface LLMBase {
@@ -10,11 +15,16 @@ export interface LLMBase {
     schema: z.Schema<OBJECT, z.ZodTypeDef, any>,
   ): Promise<OBJECT>;
 
-  generateText(
+  generateText(messages: MemoryCoreMessage[]): Promise<string>;
+
+  generateTextWithToolCalls<TOOL extends LLMTool>(
     messages: MemoryCoreMessage[],
-    tools?: LLMTool[],
+    tools?: TOOL[],
     toolChoice?: LLMToolChoice,
-  ): Promise<string>;
+  ): Promise<{
+    text: string;
+    toolCalls: LLMToolCall<TOOL["name"], z.infer<TOOL["parameters"]>>[];
+  }>;
 }
 
 export function createAITools(tools: LLMTool[]): Record<string, CoreTool> {

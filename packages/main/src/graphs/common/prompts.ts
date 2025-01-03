@@ -1,12 +1,15 @@
 import type { MemoryCoreMessage } from "../../types";
 
-export const EXTRACT_RELATIONS_PROMPT = `
+export const EXTRACT_RELATIONS_PROMPT = (
+  userId: string,
+  customPrompt: string,
+) => `
 You are an advanced algorithm designed to extract structured information from text to construct knowledge graphs. Your goal is to capture comprehensive and accurate information. Follow these key principles:
 
 1. Extract only explicitly stated information from the text.
 2. Establish relationships among the entities provided.
-3. Use "USER_ID" as the source entity for any self-references (e.g., "I," "me," "my," etc.) in user messages.
-CUSTOM_PROMPT
+3. Use "${userId}" as the source entity for any self-references (e.g., "I," "me," "my," etc.) in user messages.
+${customPrompt}
 
 Relationships:
     - Use consistent, general, and timeless relationship types.
